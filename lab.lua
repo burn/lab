@@ -8,7 +8,7 @@ best/rest clumps with most/least b/r; repeat.  (c) 2024 Tim Menzies,
 <timm@ieee.org> BSD-2clause license
 
 Options
-  -f --file     data file                        = ../tests4mop/auto93.csv
+  -f --file     data file                        = ../tests4mop/misc/auto93.csv
   -F --Far      if polarizing, ignore outliers   = 0.95
   -h --help     show help                        = false
   -H --Halves   if polarizing, use a subset      = 64
@@ -242,7 +242,7 @@ function DATA:show(it,lvl,      s1,s2)
 -- ### Objects
 
 -- Make classes.  
-function l.klassify(t)
+function l.enableMethodCalls(t)
   for s,klass in pairs(t) do
      klass.a=s; klass.__index=klass
      klass.__tostring=function(...) return l.o(...) end end end
@@ -416,15 +416,18 @@ function eg.like(    d)
 -----------------------------------------
 -- ## Start up. 
 
--- Enable methods in classes.
-l.klassify{NUM=NUM,SYM=SYM,DATA=DATA,COLS=COLS}
+-- Complete the set up of classes
+l.enableMethodCalls{NUM=NUM,SYM=SYM,DATA=DATA,COLS=COLS}
 
--- Parse `help` to make `the.    
--- Update `the` from the command line.  
--- Seed seed from `the`.
+-- Parse `help` to make `the`.      
+-- Update `the` from the command line.     
+-- Set the seed using `the.seed`.
 l.options(the,help)
 l.cli(the)
 math.randomseed(the.seed)
 
--- Do something
-if eg[the.todo] then eg[the.todo]() end
+-- Maybe do something (if this is the main top-level script)
+if   eg[the.todo] and not pcall(debug.getlocal, 4, 1) 
+then eg[the.todo]() 
+else return {the=the,help=help,NUM=NUM,SYM=SYM,DATA=DATA,COLS=COLS} 
+end
