@@ -1,8 +1,8 @@
 #!/usr/bin/env lua
--- we start with a place with (a) library functions; (b) settings; and (c) help
+-- `l` is for library functions; `the` is for settings; and `help` is help text.
 local l,the,help = {},{},[[
-ape.lua: adapative parameter evolution via sequential model
-optimizer.  Clump the data, sort any 2 clumps into best/rest; build
+lab.lua: lean adative brain (via sequential model
+optimization). Clump the data, sort any 2 clumps into best/rest; build
 a model that reports likelihood b,r of being in best,rest; add to
 best/rest clumps with most/least b/r; repeat.  (c) 2024 Tim Menzies,
 <timm@ieee.org> BSD-2clause license
