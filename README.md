@@ -5,4 +5,6 @@ src="https://img.shields.io/badge/platform-osx,linux-pink">
 
 <img align=right width=300 src="/img/logo.png">
 
-#  Lean Adaptive Brain
+#  Lightweight Adaptive Balancer 
+
+
