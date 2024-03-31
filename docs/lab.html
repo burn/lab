@@ -1002,7 +1002,7 @@ DATA can be initialized from a csv file or a list of rows.</p>
       </div>
       <p>Parse <code>help</code> to make <code>the</code>.    <br />
 Update <code>the</code> from the command line.   <br />
-Seed seed from <code>the</code>.</p>
+Set the seed using <code>the.seed</code>.</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre><span class="n">l</span><span class="p">.</span><span class="n">options</span><span class="p">(</span><span class="n">the</span><span class="p">,</span><span class="n">help</span><span class="p">)</span>
@@ -1016,10 +1016,13 @@ Seed seed from <code>the</code>.</p>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-62'>#</a>
       </div>
-      <p>Do something</p>
+      <p>Maybe do something (if this is the main top-level script)</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span class="kr">if</span> <span class="n">eg</span><span class="p">[</span><span class="n">the</span><span class="p">.</span><span class="n">todo</span><span class="p">]</span> <span class="kr">then</span> <span class="n">eg</span><span class="p">[</span><span class="n">the</span><span class="p">.</span><span class="n">todo</span><span class="p">]()</span> <span class="kr">end</span>
+      <div class="highlight"><pre><span class="kr">if</span>   <span class="n">eg</span><span class="p">[</span><span class="n">the</span><span class="p">.</span><span class="n">todo</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">pcall</span><span class="p">(</span><span class="nb">debug.getlocal</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> 
+<span class="kr">then</span> <span class="n">eg</span><span class="p">[</span><span class="n">the</span><span class="p">.</span><span class="n">todo</span><span class="p">]()</span> 
+<span class="kr">else</span> <span class="kr">return</span> <span class="p">{</span><span class="n">the</span><span class="o">=</span><span class="n">the</span><span class="p">,</span><span class="n">help</span><span class="o">=</span><span class="n">help</span><span class="p">,</span><span class="n">NUM</span><span class="o">=</span><span class="n">NUM</span><span class="p">,</span><span class="n">SYM</span><span class="o">=</span><span class="n">SYM</span><span class="p">,</span><span class="n">DATA</span><span class="o">=</span><span class="n">DATA</span><span class="p">,</span><span class="n">COLS</span><span class="o">=</span><span class="n">COLS</span><span class="p">}</span> 
+<span class="kr">end</span>
 
 </pre></div>
     </div>
