@@ -8,6 +8,7 @@ best/rest clumps with most/least b/r; repeat.  (c) 2024 Tim Menzies,
 <timm@ieee.org> BSD-2clause license
 
 Options
+  -b --best     ratio of labelled is best        = .5
   -f --file     data file                        = ../tests4mop/misc/auto93.csv
   -F --Far      if polarizing, ignore outliers   = 0.95
   -h --help     show help                        = false
@@ -15,7 +16,9 @@ Options
   -k --k        bayes                            = 2
   -l --leaf     when recursing, stop at n^leaf   = 0.5
   -L --lhs      tree print left hand side        = 35
-  -m --m         bayes                           = 1
+  -m --m        bayes                            = 1
+  -n --n        initial SMO eval budget          = 4
+  -N --N        total SMO eval budget            = 25
   -p --p        distance coeffecient             = 2 
   -s --seed     rand seed                        = 1234567891
   -t --todo     start-up action                  = nothing ]]
@@ -237,6 +240,20 @@ function DATA:show(it,lvl,      s1,s2)
   s1 = (it.lefts or it.rights) and "" or " : "..l.o(it.here:mid())
   s2 = ('|.. '):rep(lvl)..#(it.here.rows)
   print(string.format("%-" .. the.lhs .. "s %s", s2, s1)) end
+-------------------------------------------------------------------------------
+-- local smo={}
+-- function smo.learn(data)
+--   data.rows = l.shuffle(data.rows)
+--   tree = data.clone(y):halves()
+--   xy   = l.slice(data.rows,1,the.n)
+--   y    = l.slice(data.rows,the.n+1)
+--   tree = data.clone(y):halves()
+--   for i=the.n+1, the.N do
+--     best,test
+
+
+  
+
 -------------------------------------------------------------------------------
 -- ## Misc library functions
 -- ### Objects
@@ -291,6 +308,12 @@ function l.keysort(t,fun,      u,v)
   table.sort(u, function(a,b) return a.y < b.y end)
   v={}; for _,xy in pairs(u) do v[1+#v] = xy.x end
   return v end
+
+-- Return a new table, with old items sorted randomly.
+function l.shuffle(t,    u,j)
+  u={}; for _,x in pairs(t) do u[1+#u]=x; end;
+  for i = #u,2,-1 do j=math.random(i); u[i],u[j] = u[j],u[i] end
+  return u end  
 
 -- Return most common key.
 function l.mode(t,    m,N)
@@ -412,6 +435,18 @@ function eg.like(    d)
   d     = DATA.new(l.csv(the.file))
   for _,row in pairs(d.rows) do
     print( d:loglike(row,1000,2),l.o(row) )   end end
+
+function eg.shuffle(    t)
+  t = {10, 20, 30, 40, 50}
+  t = l.shuffle(t)
+  l.prints(t) end
+
+function eg.slice(    t,t1,t2)
+  t = {10, 20, 30, 40, 50,60,70,80,90,100}
+  t1 = l.slice(t,1,3)
+  t2 = l.slice(t,5,8)
+  l.prints(t1) 
+  l.prints(t2) end
 
 -----------------------------------------
 -- ## Start up. 
