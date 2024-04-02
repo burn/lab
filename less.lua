@@ -31,13 +31,13 @@ function NUM.cdf(i,x)
 function SYM.new(s,at) 
   return isa(SYM, {at=at,txt=s,n=0,mu=0}) end
 ----------------------------------------------------------------------------------------------------
-function COLS.new(t,    col,f,t,i,xy) 
+function COLS.new(t,    f,i,tmp) 
   function f(at,s) return (s:find"^[A-Z]" and NUM or SYM)(s,at) end
   i = isa(COLS, {all=kap(t,f), names=t, x={}, y={}})
   for _,col in pairs(i.all) do
     if not col.txt:find"X$" then
-      xy = col.txt:find"[!-+]$" and i.y or i.x
-      xy[1+#xy] = col end end 
+      tmp = col.txt:find"[!-+]$" and i.y or i.x
+      tmp[1+#xy] = tmp end end 
   return i end
 
 ----------------------------------------------------------------------------------------------------
