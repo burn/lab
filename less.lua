@@ -69,21 +69,24 @@ function l.sort(t,fun) table.sort(t,fun); return t end
 function l.map(t,fun,    u) u={}; for _,v in pairs(t) do u[1+#u] = fun(v)   end; return u end
 function l.kap(t,fun,    u) u={}; for k,v in pairs(t) do u[1+#u] = fun(k,v) end; return u end
 
-function l.cat(t,  n) 
-  print(#t==0 and l.kat(t,n) or l.dat(t)) end
+-- display something's print string
+function l.cat(t) print(l.as(t)); return t end
 
-function l.dat(t)     
-  return '{' .. table.concat(l.map(t,tostring), ", ") .. '}' end
+function l.as(x) -- make something's print string
+  return toString((type(x)=="table" and (#x==0 and l.kat(x) or l.dat(x))) or l.rnd(x)) end
 
-function l.kat(t,  n,    fun)
-  function fun(k,v) return l.fmt("%s=%s",k,l.rnd(v,n)) end
-  return l.dat(l.sort(l.kap(t,fun))) end
+function l.dat(t) -- make print string for tables with numeric indexes
+  return '{' .. table.concat(l.map(t,l.as), ", ") .. '}' end
 
-function l.rnd(n, ndecs,     mult)
-  if type(n) ~= "number" then return n end
-  if math.floor(n) == n  then return n end
-  mult = 10^(ndecs or the.decimals)
-  return math.floor(n * mult + 0.5) / mult end
+function l.kat(t) -- make print string for tables with keys
+  return l.dat(l.sort(l.kap(t, function (k,v) return l.fmt("%s=%s",k,l.as(v)) end))) end
+
+-- round something number
+function l.rnd(x, nDecs)
+  if type(x) ~= "number" then return x end
+  if math.floor(x) == x  then return x end
+  mult = 10^(nDecs or the.decimals)
+  return math.floor(x * mult + 0.5) / mult end
 
 function l.items(t,    n)
   i,max = 0,#t
