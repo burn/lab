@@ -69,20 +69,20 @@ function l.sort(t,fun) table.sort(t,fun); return t end
 function l.map(t,fun,    u) u={}; for _,v in pairs(t) do u[1+#u] = fun(v)   end; return u end
 function l.kap(t,fun,    u) u={}; for k,v in pairs(t) do u[1+#u] = fun(k,v) end; return u end
 
--- display something's print string
-function l.cat(t) print(l.as(t)); return t end
+-- Show `t`'s print strung
+function l.cat(t) --> T  
+  print(l.as(t)); return t end
 
-function l.as(x) -- make something's print string
+function l.as(x) --> STR representing `x`
   return toString((type(x)=="table" and (#x==0 and l.kat(x) or l.dat(x))) or l.rnd(x)) end
 
-function l.dat(t) -- make print string for tables with numeric indexes
+function l.dat(t) --> STR for  a tables with numeric indexes
   return '{' .. table.concat(l.map(t,l.as), ", ") .. '}' end
 
-function l.kat(t) -- make print string for tables with keys
+function l.kat(t) --> STR for a table with keys, sorted by keys
   return l.dat(l.sort(l.kap(t, function (k,v) return l.fmt("%s=%s",k,l.as(v)) end))) end
 
--- round something number
-function l.rnd(x, nDecs)
+function l.rnd(x, nDecs) --> NUM; rounded to `nDec`imal places
   if type(x) ~= "number" then return x end
   if math.floor(x) == x  then return x end
   mult = 10^(nDecs or the.decimals)
