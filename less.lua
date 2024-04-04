@@ -1,20 +1,18 @@
 #!/usr/bin/env lua
 local l,eg,the = {},{},{
    file ="../tests4mop/misc/auto93.csv",
-:  decimals = 3
+   decimals = 3
 }
 
 local NUM, SYM, COLS, DATA     = {},{},{},{}
 local BIG, PI, E, R            = 1E30, math.pi, math.exp(1), math.random
 local max,min,abs,log,cos,sqrt = math.max,math.min,math.abs,math.log,math.cos,math.sqrt
 ----------------------------------------------------------------------------------------------------
-local function COL(int,str) return (str:find"^[A-Z]" and NUM or SYM)(str,int) end
+function NUM:init(str,int)  --> NUM.
+  return {at=int,txt=str,n=0,mu=0,m2=0,lo=-BIG,hi=BIG,
+          heaven=(s or " "):find"-$" and 0 or 1} end
 
-function NUM.new(str,int)  --> NUM
-  return l.is(NUM, {at=int,txt=str,n=0,mu=0,m2=0,lo=-BIG,hi=BIG,
-                     heaven=(s or " "):find"-$" and 0 or 1}) end
-
-function NUM:add(num,    d) --> nil
+function NUM:add(num,    d) --> nil.
   if num~="?" then
     self.n  = self.n + 1
     self.lo = min(num, self.lo)
@@ -24,23 +22,24 @@ function NUM:add(num,    d) --> nil
     self.m2 = self.m2 + d*(num - self.mu) 
     self.sd = self.n<2 and 0 or (self.m2/(self.n - 1))^.5 end end
 
-function NUM:cdf(num,    z) --> float, found via the approximation from S. Bowling JIEM 2009
+function NUM:cdf(num,    z) --> float. Uses an approximation from S. Bowling JIEM 2009
   z = (x - self.mu)/(self.sd + 1/BIG); return 1/(1 + E^(-1.702*z)) end
 ----------------------------------------------------------------------------------------------------
-function SYM.new(str,int) --> SYM
+function SYM.new(str,int) --> SYM.
   return l.is(SYM, {at=int,txt=str,n=0,mu=0}) end
 ----------------------------------------------------------------------------------------------------
-function COLS.new(strs) -->  COLS
-  return l.is(COLS, {names=t, x={}, y={}, all = kap(strs, COL)}):categorized() end
+function COLS.new(strs,    all) -->  COLS.
+  all = kap(strs, function(int,str) return (str:find"^[A-Z]" and NUM or SYM)(str,int) end)
+  return l.is(COLS, {names=t, x={}, y={}, all=all}):categorized() end
 
-function COLS:catergorized(     t) --> COLS, with columns  placed in relevant categroies
+function COLS:catergorized(     t) --> COLS. Places columns   in their relevant categories..
   for _,col in pairs(self.all) do
     if not col.txt:find"X$" then
       t = col.txt:find"[!-+]$" and self.y or self.x
-      t[1+#t] = tmp end end  
+      t[1+#t] = col end end  
   return self end
 
-function COLS:add(t) --> t, with contents of `t` summarized in `self`
+function COLS:add(t) --> t. Summaries the contents of `t`  within `self`.
   for _,cols in pairs{i.x, i.y} do
     for _,col in pairs(cols) do
       col:add( t[col.at] ) end end
@@ -67,11 +66,19 @@ function DATA:d2h(row,     n,d)
     d = d + abs(col:norm(row[i]) - col.heaven)^2 end
   return (d/n)^.5 end
 ----------------------------------------------------------------------------------------------------
-function l.is(t,klass) --> t 
+function l.is(t,klass) --> t.
   return setmetatable(klass,t) end
 
-function l.klassify(ts) --> nil
-  for str,t in pairs(ts) do t.a=str; t.__index=t end end
+function l.init(t) --> fun. Fun calls `t.new` with a thing of class t. Returns thing of same class.
+  return function(_,...)
+    local i = setmetatable({},t)
+    return setmetatable(t.init(i,...) or i,t) end  end
+
+function l.klassify(ts) --> nil. Enable methods. Let classes print themselves and init themselves.
+  for str,t in pairs(ts) do 
+     t.__index   = t 
+     t.__tostring= function(...) return str..l.kat(...) end 
+     setmetatable(t, {__call = l.init(t)}) end end
 
 l.fmt = string.format 
 
@@ -82,16 +89,13 @@ function l.kap(t,fun,    u) u={}; for k,v in pairs(t) do u[1+#u] = fun(k,v) end;
 
 -- Show `t`'s print strung
 function l.cat(t) --> t  
-  print(l.as(t)); return t end
-
-function l.as(x) --> str representing `x`
-  return toString((type(x)=="table" and (#x==0 and l.kat(x) or l.dat(x))) or l.rnd(x)) end
+  print(#t == 0 and l.kat(t) or l.dat(t)) end
 
 function l.dat(t) --> str of a tables with numeric indexes
-  return (t.a or "") .. '{' .. table.concat(l.map(t,l.as), ", ") .. '}' end
+  return '{' .. table.concat(l.map(t,tostring), ", ") .. '}' end
 
 function l.kat(t) --> str of a table with keys, sorted by keys
-  return l.dat(l.sort(l.kap(t, function (k,v) return l.fmt("%s=%s",k,l.as(v)) end))) end
+  return l.dat(l.sort(l.kap(t, function (k,v) return l.fmt("%s=%s",k, l.rnd(v)) end))) end
 
 function l.rnd(x, nDecs) --> num rounded to `nDec`imal places
   if type(x) ~= "number" then return x end
@@ -106,22 +110,23 @@ function l.items(t,    n)
 function l.coerce(s)
   return math.tointeger(s) or tonumber(s) or s=="true" or (s~="false" and s) end
 
-function l.csv(src)
+function l.words(s,fun,    t) --> t.
+  t={}; for s1 in s:gsub("%s+", ""):gmatch("([^,]+)") do t[1+#t] = fun(s1) end 
+  return t end 
+
+function l.csv(src) --> fun. Iterator to generate rows in a csv file.
   src = src=="-" and io.stdin or io.input(src)
-  return function(      s,t)
-    s=io.read()
-    if   s
-    then t={}; for s1 in s:gsub("%s+", ""):gmatch("([^,]+)") do t[1+#t]=l.coerce(s1) end
-         return t
-    else io.close(src) end end end
+  return function(      s)
+    s = io.read()
+    if s then return l.words(s, l.coerce) else io.close(src) end end end
 ----------------------------------------------------------------------------------------------------
 function eg.num(   n) 
-  n=NUM.new()
+  n=NUM"fred"
   for j=1,10000 do n:add(R()^2) end 
-  l.cat(n) end
+  print(n) end
 
 function eg.norm(  n)
-  n=NUM.new()
+  n=NUM()
   for j=1,10000 do n:add( (10 + 2 * sqrt(-2*log(R())) * cos(2*PI*R()))) end
   for j=8,12,.25 do print(j, n:cdf(j)) end end
 
