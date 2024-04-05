@@ -92,12 +92,12 @@ function l.entropy(t,    e,N) --> n;
 function l.mode(t,     x,N)
   x,N=0,0; for k,n in pairs(t) do if n>N then x,N = k,n end end; return x end
 
-function l.init(t) --> fun. Fun calls `t.init` with a thing of class t. Returns thing of same class.
+function l.init(t) --> fun; Fun calls `t.init` with a thing of class t. Returns thing of same class.
   return function(_,...)
     local i = setmetatable({},t)
     return setmetatable(t.init(i,...) or i,t) end  end
 
-function l.klassify(ts) --> nil. Enable methods. Let classes print themselves and init themselves.
+function l.klassify(ts) --> nil; Enable methods. Let classes print themselves and init themselves.
   for str,t in pairs(ts) do 
      t.__index   = t 
      t.__tostring= function(...) return str..l.kat(...) end 
@@ -133,11 +133,11 @@ function l.items(t,    i,hi)
 function l.coerce(s)
   return math.tointeger(s) or tonumber(s) or s=="true" or (s~="false" and s) end
 
-function l.words(s,fun,    t) --> t.
+function l.words(s,fun,    t) --> t;
   t={}; for s1 in s:gsub("%s+", ""):gmatch("([^,]+)") do l.push(t, fun(s1)) end 
   return t end 
 
-function l.csv(src) --> fun. Iterator to generate rows in a csv file.
+function l.csv(src) --> fun; Iterator to generate rows in a csv file.
   src = src=="-" and io.stdin or io.input(src)
   return function(      s)
     s = io.read()
