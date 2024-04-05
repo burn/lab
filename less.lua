@@ -43,17 +43,16 @@ function SYM:mid() --> x.
 function SYM:div() --> n. 
   return l.entropy(self.has) end
 ----------------------------------------------------------------------------------------------------
-function COLS:init(strs,    all) -->  COLS.
-  all = l.kap(strs, function(int,str) return (str:find"^[A-Z]" and NUM or SYM)(str,int) end)
-  self.names, self.x, self.y , self.all = strs, {}, {}, all
+function COLS:init(ts,    fun) -->  COLS.
+  fun = function(int,str) return (str:find"^[A-Z]" and NUM or SYM)(str,int) end
+  self.names, self.x, self.y, self.klass, self.all = ts, {}, {}, nil, l.kap(ts, fun)
   self:categorized() end
 
 function COLS:catergorized(     t) --> COLS. Places columns   in their relevant categories..
   for _,col in pairs(self.all) do
     if not col.txt:find"X$" then
-      t = col.txt:find"[!-+]$" and self.y or self.x
-      t[1+#t] = col end end  
-  return self end
+      l.push( col.txt:find"[!-+]$" and self.y or self.x, col)
+      if col.txt:find"!$" then self.klass= col end end end end
 
 function COLS:add(t) --> t. Summaries the contents of `t`  within `self`.
   for _,cols in pairs{self.x, self.y} do
@@ -68,7 +67,7 @@ function DATA:init(src,  isOrdered,    self) --> DATA
 
 function DATA:add(t)
   if   self.cols 
-  then self.rows[1+#self.rows] = self.cols:add(t) 
+  then l.push(self.rows, self.cols:add(t))
   else self.cols = COLS(t) end end
 
 function DATA:sort()
@@ -81,13 +80,16 @@ function DATA:d2h(row,     n,d)
     d = d + abs(col:norm(row[col.at]) - col.heaven)^2 end
   return (d/n)^.5 end
 ----------------------------------------------------------------------------------------------------
+function l.push(t,x) --> x.
+  t[1+#t] = x; return x end
+
 function l.entropy(t,    e,N) --> n.
   N=0; for _,n in pairs(t) do N = N+n end
   e=0; for _,n in pairs(t) do if n>0 then e = e - n/N*log(n/N,2) end end
   return e,N end
 
-function l.mode(t,     x,n)
-  x,n=0,0; for x1,n1 in pairs(t) do if n1>n then x,n = x1,n1 end end; return x end
+function l.mode(t,     x,N)
+  x,N=0,0; for k,n in pairs(t) do if n>N then x,N = k,n end end; return x end
 
 function l.init(t) --> fun. Fun calls `t.init` with a thing of class t. Returns thing of same class.
   return function(_,...)
@@ -104,8 +106,8 @@ l.fmt = string.format
 
 function l.sort(t,fun) table.sort(t,fun); return t end
 
-function l.map(t,fun,    u) u={}; for _,v in pairs(t) do u[1+#u] = fun(v)   end; return u end
-function l.kap(t,fun,    u) u={}; for k,v in pairs(t) do u[1+#u] = fun(k,v) end; return u end
+function l.map(t,fun,    u) u={}; for _,v in pairs(t) do l.push(u, fun(v))   end; return u end
+function l.kap(t,fun,    u) u={}; for k,v in pairs(t) do l.push(u, fun(k,v)) end; return u end
 
 -- Show `t`'s print strung
 function l.cat(t) --> t  
@@ -131,7 +133,7 @@ function l.coerce(s)
   return math.tointeger(s) or tonumber(s) or s=="true" or (s~="false" and s) end
 
 function l.words(s,fun,    t) --> t.
-  t={}; for s1 in s:gsub("%s+", ""):gmatch("([^,]+)") do t[1+#t] = fun(s1) end 
+  t={}; for s1 in s:gsub("%s+", ""):gmatch("([^,]+)") do l.push(t, fun(s1)) end 
   return t end 
 
 function l.csv(src) --> fun. Iterator to generate rows in a csv file.
@@ -148,7 +150,7 @@ function eg.num(   n)
 function eg.norm(  n)
   n=NUM()
   for j=1,10000 do n:add( (0 + 1 * sqrt(-2*log(R())) * cos(2*PI*R()))) end
-  for j=-3.5,0,.1 do print(j, n:cdf(j)) end end
+  for j= -2,2, .1 do print(j, n:cdf(j)) end end
 
 function eg.items()
   for x in l.items{10,20,30,40} do print(x) end end
