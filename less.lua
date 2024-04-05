@@ -8,11 +8,11 @@ local NUM, SYM, COLS, DATA     = {},{},{},{}
 local BIG, PI, E, R            = 1E30, math.pi, math.exp(1), math.random
 local max,min,abs,log,cos,sqrt = math.max,math.min,math.abs,math.log,math.cos,math.sqrt
 ----------------------------------------------------------------------------------------------------
-function NUM:init(str,int)  --> NUM.
+function NUM:init(str,int)  --> NUM;
   return {at=int,txt=str,n=0,mu=0,m2=0,lo=-BIG,hi=BIG,
           heaven=(str or " "):find"-$" and 0 or 1} end
 
-function NUM:add(num,    d) --> nil.
+function NUM:add(num,    d) --> nil;
   if num~="?" then
     self.n  = 1 + self.n 
     self.lo = min(num, self.lo)
@@ -25,42 +25,43 @@ function NUM:add(num,    d) --> nil.
 function NUM:mid() return self.mu end
 function NUM:div() return self.sd end
 
-function NUM:cdf(num,    z) --> float. Uses an approximation from S. Bowling JIEM 2009
+function NUM:cdf(num,    z) --> float; Uses an approximation from S. Bowling JIEM 2009
   z = (num - self.mu)/(self.sd + 1/BIG); return 1/(1 + E^(-1.65451*z)) end
 ----------------------------------------------------------------------------------------------------
-function SYM:init(str,int) --> SYM.
+-- ## SYM
+function SYM:init(str,int) --> SYM;
   return {at=int,txt=str,n=0,has={}} end
 
-function SYM:add(x,   n) --> nil.
+function SYM:add(x,   n) --> nil;
   if x~="?" then
     n           = n or 1
     self.n      = n + self.n 
     self.has[x] = n + (self.has[x] or 0) end end
 
-function SYM:mid() --> x.
+function SYM:mid() --> x;
   return l.mode(self.has) end
 
-function SYM:div() --> n. 
+function SYM:div() --> n; 
   return l.entropy(self.has) end
 ----------------------------------------------------------------------------------------------------
-function COLS:init(ts,    fun) -->  COLS.
+function COLS:init(ts,    fun) -->  COLS;
   fun = function(int,str) return (str:find"^[A-Z]" and NUM or SYM)(str,int) end
   self.names, self.x, self.y, self.klass, self.all = ts, {}, {}, nil, l.kap(ts, fun)
   self:categorized() end
 
-function COLS:catergorized(     t) --> COLS. Places columns   in their relevant categories..
+function COLS:catergorized(     t) --> COLS; Places columns   in their relevant categories..
   for _,col in pairs(self.all) do
     if not col.txt:find"X$" then
       l.push( col.txt:find"[!-+]$" and self.y or self.x, col)
       if col.txt:find"!$" then self.klass= col end end end end
 
-function COLS:add(t) --> t. Summaries the contents of `t`  within `self`.
+function COLS:add(t) --> t; Summaries the contents of `t`  within `self`.
   for _,cols in pairs{self.x, self.y} do
     for _,col in pairs(cols) do
       col:add( t[col.at] ) end end
   return t end
 ----------------------------------------------------------------------------------------------------
-function DATA:init(src,  isOrdered,    self) --> DATA
+function DATA:init(src,  isOrdered,    self) --> DATA;
   self.rows, self.cols = {}, nil
   for t in src do self:add(t) end
   if isOrdered then self.sort() end end
@@ -80,10 +81,10 @@ function DATA:d2h(row,     n,d)
     d = d + abs(col:norm(row[col.at]) - col.heaven)^2 end
   return (d/n)^.5 end
 ----------------------------------------------------------------------------------------------------
-function l.push(t,x) --> x.
+function l.push(t,x) --> x;
   t[1+#t] = x; return x end
 
-function l.entropy(t,    e,N) --> n.
+function l.entropy(t,    e,N) --> n;
   N=0; for _,n in pairs(t) do N = N+n end
   e=0; for _,n in pairs(t) do if n>0 then e = e - n/N*log(n/N,2) end end
   return e,N end
@@ -110,16 +111,16 @@ function l.map(t,fun,    u) u={}; for _,v in pairs(t) do l.push(u, fun(v))   end
 function l.kap(t,fun,    u) u={}; for k,v in pairs(t) do l.push(u, fun(k,v)) end; return u end
 
 -- Show `t`'s print strung
-function l.cat(t) --> t  
+function l.cat(t) --> t;  
   print(#t == 0 and l.kat(t) or l.dat(t)) end
 
-function l.dat(t) --> str of a tables with numeric indexes
+function l.dat(t) --> str;  For tables with numeric indexes.
   return '{' .. table.concat(l.map(t,tostring), ", ") .. '}' end
 
-function l.kat(t) --> str of a table with keys, sorted by keys
+function l.kat(t) --> str; For table with keys, sorted by keys.
   return l.dat(l.sort(l.kap(t, function (k,v) return l.fmt("%s=%s",k, l.rnd(v)) end))) end
 
-function l.rnd(x, nDecs,    mult) --> num rounded to `nDec`imal places
+function l.rnd(x, nDecs,    mult) --> num; Rounded to `nDec`imal places.
   if type(x) ~= "number" then return x end
   if math.floor(x) == x  then return x end
   mult = 10^(nDecs or the.decimals)
