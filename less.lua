@@ -3,12 +3,15 @@ local l,eg,the = {},{},{
    file ="../tests4mop/misc/auto93.csv",
    decimals = 3
 }
-
+-- need a trig to mimi Num
 local NUM, SYM, COLS, DATA     = {},{},{},{}
 local BIG, PI, E, R            = 1E30, math.pi, math.exp(1), math.random
 local max,min,abs,log,cos,sqrt = math.max,math.min,math.abs,math.log,math.cos,math.sqrt
 ----------------------------------------------------------------------------------------------------
-function NUM:init(str,int)  --> NUM;
+local function COL(int,str) --> NUM or SYM. Uppercase names become NUMs. Others become SYMs.
+  return ((str:find"^[A-Z]" and NUM or SYM)(str,int) end
+  
+function NUM:new(str,int)  --> NUM;
   return {at=int,txt=str,n=0,mu=0,m2=0,lo=-BIG,hi=BIG,
           heaven=(str or " "):find"-$" and 0 or 1} end
 
@@ -29,7 +32,7 @@ function NUM:cdf(num,    z) --> float; Uses an approximation from S. Bowling JIE
   z = (num - self.mu)/(self.sd + 1/BIG); return 1/(1 + E^(-1.65451*z)) end
 ----------------------------------------------------------------------------------------------------
 -- ## SYM
-function SYM:init(str,int) --> SYM;
+function SYM:new(str,int) --> SYM;
   return {at=int,txt=str,n=0,has={}} end
 
 function SYM:add(x,   n) --> nil;
@@ -38,56 +41,54 @@ function SYM:add(x,   n) --> nil;
     self.n      = n + self.n 
     self.has[x] = n + (self.has[x] or 0) end end
 
-function SYM:mid() --> x;
-  return l.mode(self.has) end
-
-function SYM:div() --> n; 
-  return l.entropy(self.has) end
+function SYM:mid() return l.mode(self.has) end
+function SYM:div() return l.entropy(self.has) end
 ----------------------------------------------------------------------------------------------------
-function COLS:init(ts,    fun) -->  COLS;
-  fun = function(int,str) return (str:find"^[A-Z]" and NUM or SYM)(str,int) end
-  self.names, self.x, self.y, self.klass, self.all = ts, {}, {}, nil, l.kap(ts, fun)
-  self:categorized() end
-
-function COLS:catergorized(     t) --> COLS; Places columns   in their relevant categories..
-  for _,col in pairs(self.all) do
+function COLS:new(tcol) -->  COLS;  
+  self.names, self.x, self.y, self.klass, self.all = {}, {}, {}, nil, tcol
+  for _,col in pairs(tcol) do
+    l.push(self.names, col.txt)
     if not col.txt:find"X$" then
       l.push( col.txt:find"[!-+]$" and self.y or self.x, col)
-      if col.txt:find"!$" then self.klass= col end end end end
+      if col.txt:find"!$" then self.klass= col end end end
+  return self end
 
-function COLS:add(t) --> t; Summaries the contents of `t`  within `self`.
+function COLS:add(t) --> nil; Summaries the contents of `t`  within `self`.
   for _,cols in pairs{self.x, self.y} do
     for _,col in pairs(cols) do
-      col:add( t[col.at] ) end end
-  return t end
+      col:add( t[col.at] ) end end end
 ----------------------------------------------------------------------------------------------------
-function DATA:init(src,  isOrdered,    self) --> DATA;
+function DATA:new(  src,  isOrdered) --> a DATA;
   self.rows, self.cols = {}, nil
-  for t in src do self:add(t) end
-  if isOrdered then self.sort() end end
+  self:adds(src,isOrdered) end
 
-function DATA:add(t)
-  if   self.cols 
-  then l.push(self.rows, self.cols:add(t))
-  else self.cols = COLS(t) end end
+function DATA:clone(  src,isOrdered) --> DATA; Returns a DATA with the same structure as `self`.
+  return DATA({self.cols.names}):adds(src,isOrdered) end
+
+function DATA:adds(src,isOrdered) --> a DATA;
+  if src then for t in src do self:add(t) end end
+  if isOrdered then self:sort() end
+  return self end
+
+function DATA:add(t) --> nil; Updates the column summaries from `t`.
+  if   self.cols
+  then l.push(self.rows, t)
+       self.cols:add(t)
+  else self.cols = COLS(l.kap(t, COL))  end end
 
 function DATA:sort()
   return l.keysort(self.rows, function(r) return self:d2h(r) end) end
 
-function DATA:d2h(row,     n,d)
-  n,d = 0,0
-  for _,col in pairs(self.cols.y) do
-    n = n + 1
-    d = d + abs(col:norm(row[col.at]) - col.heaven)^2 end
-  return (d/n)^.5 end
+function DATA:d2h(row,     d)
+  d = l.sum(self.cols.y, function(c) return abs(c:norm(row[c.at]) - c.heaven)^2 end)
+  return (d/#self/cols.y)^.5 end
 ----------------------------------------------------------------------------------------------------
 function l.push(t,x) --> x;
   t[1+#t] = x; return x end
 
 function l.entropy(t,    e,N) --> n;
   N=0; for _,n in pairs(t) do N = N+n end
-  e=0; for _,n in pairs(t) do if n>0 then e = e - n/N*log(n/N,2) end end
-  return e,N end
+  return l.sum(t, function(n)   if n>0 then return -n/N*log(n/N,2) end end) end
 
 function l.mode(t,     x,N)
   x,N=0,0; for k,n in pairs(t) do if n>N then x,N = k,n end end; return x end
@@ -107,6 +108,7 @@ l.fmt = string.format
 
 function l.sort(t,fun) table.sort(t,fun); return t end
 
+function l.sum(t,fun,    n) n=0;  for _,v in pairs(t) do n = n + fun(v)      end; return n end
 function l.map(t,fun,    u) u={}; for _,v in pairs(t) do l.push(u, fun(v))   end; return u end
 function l.kap(t,fun,    u) u={}; for k,v in pairs(t) do l.push(u, fun(k,v)) end; return u end
 
@@ -135,7 +137,7 @@ function l.coerce(s)
 
 function l.words(s,fun,    t) --> t;
   t={}; for s1 in s:gsub("%s+", ""):gmatch("([^,]+)") do l.push(t, fun(s1)) end 
-  return t end 
+  return t end
 
 function l.csv(src) --> fun; Iterator to generate rows in a csv file.
   src = src=="-" and io.stdin or io.input(src)
